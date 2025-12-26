@@ -1,16 +1,27 @@
-# React + Vite
+# 🎨 Frontend Geliştirici Notları
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Burası projenin kokpiti. Vite + React ve Leaflet kullanıyoruz.
 
-Currently, two official plugins are available:
+## ⚠️ DİKKAT EDİLMESİ GEREKENLER
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1.  **Node Modules Tuzağı:**
+    * `node_modules` klasörü Docker tarafında izole edilmiştir (`/app/node_modules`).
+    * Yerel makinenizde `npm install` yapmanız **sadece** VSCode'un kod tamamlama özelliği içindir.
+    * Uygulama, Docker'ın içindeki paketleri kullanır. Yeni paket eklerseniz `docker-compose up --build` şarttır.
 
-## React Compiler
+2.  **Uzay Haritası Mantığı (ÖNEMLİ):**
+    * Standart Dünya haritası (Lat/Lng) kullanmıyoruz!
+    * **L.CRS.Simple** kullanıyoruz. Bu, [0,0] noktasından başlayan piksel bazlı bir koordinat sistemidir.
+    * YOLO koordinatları (Sol-Üst) ile Leaflet koordinatları (Sol-Alt) farklı olabilir. `App.jsx` içindeki dönüşüm formüllerine dokunurken dikkatli olun.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+3.  **API Bağlantısı:**
+    * Backend adresi kod içinde sabitlenmiştir: `const API_URL = "http://localhost:8001"`
+    * Eğer backend portunu değiştirirseniz burayı güncellemeyi unutmayın.
 
-## Expanding the ESLint configuration
+## 🚀 Geliştirme İpuçları
+* Tasarım için `src/index.css` içindeki CSS değişkenlerini (`--text-color` vb.) kullanın. Hardcode renk yazmaktan kaçının.
+* Log ekranı (`sidebar`) sadece debug amaçlıdır, son kullanıcıya bu kadar detay göstermeyeceğiz.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🐛 Sık Karşılaşılan Sorunlar
+* **"Network Error":** Backend (Port 8001) ayakta mı? CORS ayarı `main.py` içinde yapılı mı?
+* **Harita Yüklenmiyor:** Resim yolu (`/images/...`) doğru mu? Backend statik dosyaları sunuyor mu?
