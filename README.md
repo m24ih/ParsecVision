@@ -28,7 +28,7 @@ Proje **Docker First** yaklaşımıyla geliştirilmiştir. Yerel makinenizde sad
 ### 1. Projeyi Klonlayın
 
 ```bash
-git clone [https://github.com/username/ParsecVision.git](https://github.com/username/ParsecVision.git)
+git clone https://github.com/m24ih/ParsecVision.git
 cd ParsecVision
 ```
 
@@ -36,7 +36,7 @@ cd ParsecVision
 
 Ana dizinde bir .env dosyası oluşturun ve Google Gemini API anahtarınızı ekleyin:
 
-```toml
+```ini
 # .env
 GEMINI_API_KEY=AIzaSyDxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 DATABASE_URL=postgresql://user:password@db:5432/parsec_db
