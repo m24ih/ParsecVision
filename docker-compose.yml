@@ -28,6 +28,16 @@ services:
       # API Keyleri buraya eklenecek
       # - ASTROMETRY_API_KEY=xxx
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-
+  frontend:
+    build: ./frontend
+    container_name: parsec_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # Bu satır çok kritik: Host'taki node_modules ile konteynerin çakışmasını önler
+      - /app/node_modules
+    depends_on:
+      - backend
 volumes:
   postgres_data:

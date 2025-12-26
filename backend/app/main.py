@@ -8,11 +8,20 @@ from app.database import engine, Base, get_db
 from app import models
 from app.services.llm_service import LLMService
 from app.services.yolo_service import YOLOService
+from fastapi.middleware.cors import CORSMiddleware
 
 # Tabloları oluştur
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ParsecVision Core 0.2.0")
+# --- CORS AYARLARI (YENİ) ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Güvenlik notu: Prodüksiyonda sadece "http://localhost:5173" olmalı
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Servisleri başlat
 yolo_service = YOLOService()
@@ -49,8 +58,9 @@ async def process_image(file: UploadFile = File(...), db: Session = Depends(get_
     # YOLO Analizi
     results = yolo_service.detect_objects(file_path)
     
-    # DB Kaydı (Tespitler)
-    saved_detections = []
+    # DB Kaydı ve Yanıt Hazırlığı
+    response_detections = [] # Frontend'e dönecek liste
+    
     for det in results:
         new_det = models.Detection(
             image_id=file_id,
@@ -62,14 +72,25 @@ async def process_image(file: UploadFile = File(...), db: Session = Depends(get_
             h=det["box"]["h"]
         )
         db.add(new_det)
-        saved_detections.append(new_det)
+        db.flush() # Commit etmeden ID alabilmek için flush yapıyoruz
+        db.refresh(new_det) # ID'yi nesneye yükle
+        
+        # Yanıt listesine ID ile birlikte ekle
+        response_detections.append({
+            "id": new_det.id, # İŞTE EKSİK OLAN PARÇA BU
+            "label": new_det.label,
+            "confidence": new_det.confidence,
+            "box": {
+                "x": new_det.x, "y": new_det.y, "w": new_det.w, "h": new_det.h
+            }
+        })
         
     db.commit()
     
     return {
         "image_id": file_id,
         "detections_found": len(results),
-        "results": results
+        "results": response_detections # Artık içinde ID'ler var
     }
 
 @app.post("/explain-detection/{detection_id}")
