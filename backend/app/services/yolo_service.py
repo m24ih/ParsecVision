@@ -7,8 +7,8 @@ class YOLOService:
         if os.path.exists(model_path):
             self.model = YOLO(model_path)
         else:
-            # Yedek plan (ama manuel koyduğun için buraya düşmemeli)
-            print("Model dosyası bulunamadı, indirmeyi deniyor...")
+            # Backup plan (but shouldn't fall here since you put it manually)
+            print("Model file not found, attempting to download...")
             self.model = YOLO("yolo11n.pt")
     def detect_objects(self, image_path: str):
         results = self.model(image_path)

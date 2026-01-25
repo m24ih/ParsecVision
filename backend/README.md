@@ -1,43 +1,42 @@
-# 🔧 Backend Geliştirici Notları
+# 🔧 Backend Developer Notes
 
-Burası **ParsecVision**'ın motor dairesidir. Kod yazarken aşağıdaki kurallara ve uyarılara dikkat edelim.
+This is the engine room of **ParsecVision**. Please pay attention to the following rules and warnings when writing code.
 
-## 🚨 KRİTİK UYARILAR
+## 🚨 CRITICAL WARNINGS
 
-1.  **Model Dosyası (`.pt`):**
+1.  **Model File (`.pt`):**
+    - `yolo11n.pt` file is blocked by `.gitignore`.
+    - Download may timeout during Docker build if internet is slow.
+    - **Solution:** Manually download the model and place it in the `backend/` root directory. The code is set to check `/app/yolo11n.pt`.
 
-    - `yolo11n.pt` dosyası `.gitignore` ile engellenmiştir.
-    - Docker build sırasında internet yavaşsa indirme zaman aşımına uğrayabilir.
-    - **Çözüm:** Modeli manuel indirip `backend/` kök dizinine atın. Kod, `/app/yolo11n.pt` yolunu kontrol edecek şekilde ayarlandı.
-
-2.  **Veritabanı Şeması (Migration Yok!):**
-
-    - Şu an Alembic kullanmıyoruz. `Base.metadata.create_all` ile tablolar otomatik oluşuyor.
-    - **Uyarı:** `models.py` içinde bir tabloyu değiştirirseniz, Docker volume'ünü silmeden değişiklik yansımaz!
-    - _DB Sıfırlama:_ `docker-compose down -v` (Veriler gider!)
+2.  **Database Schema (No Migrations!):**
+    - We are currently not using Alembic. Tables are automatically created with `Base.metadata.create_all`.
+    - **Warning:** If you modify a table in `models.py`, changes will not reflect unless you delete the Docker volume!
+    - _DB Reset:_ `docker-compose down -v` (Data will be lost!)
 
 3.  **VSCode & IntelliSense:**
-    - Kod Docker'da çalışsa da, VSCode'un "kızarmaması" için yerel sanal ortam kurmalısınız:
+    - Although the code runs in Docker, you should set up a local virtual environment for VSCode not to "complain":
     ```bash
     python -m venv .venv
     source .venv/bin/activate
     pip install -r requirements.txt
     ```
-    - _Not:_ Bu sadece editör içindir, çalıştırmak için Docker kullanın.
+
+    - _Note:_ This is only for the editor, use Docker to run.
 
 ## 🔑 Environment (.env)
 
-Backend'in çalışması için ana dizindeki `.env` dosyasında şu kesinlikle olmalı:
+The following must be present in the `.env` file in the root directory for the Backend to work:
 
 ```ini
 GEMINI_API_KEY=AIzaSy...
 ```
 
-Yazmazsanız /analyze-text endpoint'i "API Key Eksik" hatası döner.
+If you don't write it, the /analyze-text endpoint will return an "API Key Missing" error.
 
 ## 📡 API Test
 
-Backend portu: 8001 (Eco Kitchen ile çakışmaması için 8000 değil!)
+Backend port: 8001 (Should not be 8000 to avoid conflict with Eco Kitchen!)
 
 Docs: http://localhost:8001/docs
 

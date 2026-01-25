@@ -1,40 +1,40 @@
 # ParsecVision 🌌
 
-**ParsecVision**, uzay görüntülerini analiz eden, gök cisimlerini tespit eden ve yapay zeka destekli bilimsel açıklamalar sunan tam kapsamlı bir astronomik analiz sistemidir.
+**ParsecVision** is a comprehensive astronomical analysis system that analyzes space imagery, detects celestial bodies, and provides AI-powered scientific explanations.
 
-Proje; modern mikroservis mimarisi, konteynerizasyon ve hibrit yapay zeka (Computer Vision + LLM) teknolojilerini birleştirir.
-
----
-
-## 🚀 Mimari ve Teknoloji Yığını
-
-Sistem, Docker üzerinde çalışan izole servislerden oluşur:
-
-| Katman           | Teknoloji               | Görevi                                                           |
-| :--------------- | :---------------------- | :--------------------------------------------------------------- |
-| **Frontend**     | React (Vite), Leaflet   | Kullanıcı arayüzü ve CRS.Simple harita görselleştirme.           |
-| **Backend**      | FastAPI (Python 3.10)   | REST API, iş mantığı ve orkestrasyon.                            |
-| **Göz (Vision)** | YOLOv11 (Ultralytics)   | Görüntü üzerindeki nesnelerin tespiti ve koordinatları.          |
-| **Beyin (LLM)**  | Google Gemini 3.0 Flash | Tespit edilen cisimlerin bilimsel analizi ve hikayeleştirilmesi. |
-| **Hafıza (DB)**  | PostgreSQL 15           | Görüntü metadata'sı ve analiz sonuçlarının saklanması.           |
-| **DevOps**       | Docker & Docker Compose | Tüm altyapının tek komutla ayağa kaldırılması.                   |
+The project combines modern microservice architecture, containerization, and hybrid AI (Computer Vision + LLM) technologies.
 
 ---
 
-## 🛠 Kurulum ve Çalıştırma
+## 🚀 Architecture and Technology Stack
 
-Proje **Docker First** yaklaşımıyla geliştirilmiştir. Yerel makinenizde sadece Docker'ın kurulu olması yeterlidir.
+The system consists of isolated services running on Docker:
 
-### 1. Projeyi Klonlayın
+| Layer            | Technology              | Role                                                         |
+| :--------------- | :---------------------- | :----------------------------------------------------------- |
+| **Frontend**     | React (Vite), Leaflet   | User interface and CRS.Simple map visualization.             |
+| **Backend**      | FastAPI (Python 3.10)   | REST API, business logic, and orchestration.                 |
+| **Eye (Vision)** | YOLOv11 (Ultralytics)   | Detection and coordinates of objects on the image.           |
+| **Brain (LLM)**  | Google Gemini 3.0 Flash | Scientific analysis and storytelling of detected objects.    |
+| **Memory (DB)**  | PostgreSQL 15           | Storage of image metadata and analysis results.              |
+| **DevOps**       | Docker & Docker Compose | Bringing up the entire infrastructure with a single command. |
+
+---
+
+## 🛠 Installation and Execution
+
+The project is developed with a **Docker First** approach. You only need to have Docker installed on your local machine.
+
+### 1. Clone the Project
 
 ```bash
 git clone https://github.com/m24ih/ParsecVision.git
 cd ParsecVision
 ```
 
-### 2. Ortam Değişkenlerini Ayarlayın
+### 2. Set Environment Variables
 
-Ana dizinde bir .env dosyası oluşturun ve Google Gemini API anahtarınızı ekleyin:
+Create a .env file in the root directory and add your Google Gemini API key:
 
 ```ini
 # .env
@@ -42,63 +42,63 @@ GEMINI_API_KEY=AIzaSyDxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 DATABASE_URL=postgresql://user:password@db:5432/parsec_db
 ```
 
-### 3. Sistemi Başlatın
+### 3. Start the System
 
 ```Bash
 docker-compose up --build -d
 ```
 
-Not: İlk kurulumda YOLO modeli ve NPM paketleri nedeniyle işlem birkaç dakika sürebilir.
+Note: The first installation may take a few minutes due to the YOLO model and NPM packages.
 
-## 📡 Servis Endpoints
+## 📡 Service Endpoints
 
-Sistem ayağa kalktığında aşağıdaki adreslerden erişilebilir:
+When the system is up, it can be accessed from the following addresses:
 
-Frontend Arayüzü: http://localhost:5173
+Frontend Interface: http://localhost:5173
 
 Backend API & Swagger: http://localhost:8001/docs
 
-Veritabanı Portu: 5433 (Yerel erişim için yönlendirilmiştir)
+Database Port: 5433 (Forwarded for local access)
 
-## 📂 Proje Yapısı
+## 📂 Project Structure
 
 ```
 ParsecVision/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py          # API Gateway & Logic
-│   │   ├── models.py        # SQLAlchemy DB Modelleri
+│   │   ├── models.py        # SQLAlchemy DB Models
 │   │   ├── services/
-│   │   │   ├── yolo_service.py  # Nesne Tespiti
-│   │   │   └── llm_service.py   # Gemini Entegrasyonu
+│   │   │   ├── yolo_service.py  # Object Detection
+│   │   │   └── llm_service.py   # Gemini Integration
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx          # Ana UI Mantığı
-│   │   └── index.css        # Sci-Fi Stil Dosyası
+│   │   ├── App.jsx          # Main UI Logic
+│   │   └── index.css        # Sci-Fi Style File
 │   ├── Dockerfile
 │   └── package.json
-├── data/                    # Yüklenen görseller (Volume)
-└── docker-compose.yml       # Orkestrasyon
+├── data/                    # Uploaded images (Volume)
+└── docker-compose.yml       # Orchestration
 ```
 
-## 🧪 Özellikler (Mevcut Durum: v0.5 Alpha)
+## 🧪 Features (Current Status: v0.5 Alpha)
 
-[x] Görüntü Yükleme Hattı: Ham görüntülerin işlenmesi ve arşivlenmesi.
+[x] Image Upload Pipeline: Processing and archiving raw images.
 
-[x] Otomatik Tespit: YOLO modeli ile görüntüdeki nesnelerin (şimdilik genel nesneler) tespiti.
+[x] Automatic Detection: Detection of objects (generic objects for now) in the image with the YOLO model.
 
-[x] AI Analizi: Tespit edilen nesne hakkında Gemini üzerinden anlık Türkçe bilimsel rapor.
+[x] AI Analysis: Instant scientific report on the detected object via Gemini.
 
-[x] Tam Docker İzolasyonu: Frontend ve Backend arasında CORS yapılandırılmış iletişim.
+[x] Full Docker Isolation: CORS configured communication between Frontend and Backend.
 
-## 🗺 Yol Haritası
+## 🗺 Roadmap
 
-[ ] Leaflet Entegrasyonu: Görüntülerin harita katmanı olarak sunulması.
+[ ] Leaflet Integration: Presenting images as a map layer.
 
-[ ] Astroquery: Gerçek uzay koordinatlarının (RA/Dec) çözümlenmesi.
+[ ] Astroquery: Resolving real space coordinates (RA/Dec).
 
-[ ] Custom Model: YOLO'nun gerçek uzay nesneleri (Galaksi, Nebula) için eğitilmesi.
+[ ] Custom Model: Training YOLO for real space objects (Galaxy, Nebula).
 
 ---

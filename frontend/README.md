@@ -1,27 +1,29 @@
-# 🎨 Frontend Geliştirici Notları
+# 🎨 Frontend Developer Notes
 
-Burası projenin kokpiti. Vite + React ve Leaflet kullanıyoruz.
+This is the cockpit of the project. We use Vite + React and Leaflet.
 
-## ⚠️ DİKKAT EDİLMESİ GEREKENLER
+## ⚠️ THINGS TO PAY ATTENTION TO
 
-1.  **Node Modules Tuzağı:**
-    * `node_modules` klasörü Docker tarafında izole edilmiştir (`/app/node_modules`).
-    * Yerel makinenizde `npm install` yapmanız **sadece** VSCode'un kod tamamlama özelliği içindir.
-    * Uygulama, Docker'ın içindeki paketleri kullanır. Yeni paket eklerseniz `docker-compose up --build` şarttır.
+1.  **Node Modules Trap:**
+    - The `node_modules` folder is isolated on the Docker side (`/app/node_modules`).
+    - Running `npm install` on your local machine is **only** for VSCode's code completion feature.
+    - The application uses the packages inside Docker. If you add a new package, `docker-compose up --build` is required.
 
-2.  **Uzay Haritası Mantığı (ÖNEMLİ):**
-    * Standart Dünya haritası (Lat/Lng) kullanmıyoruz!
-    * **L.CRS.Simple** kullanıyoruz. Bu, [0,0] noktasından başlayan piksel bazlı bir koordinat sistemidir.
-    * YOLO koordinatları (Sol-Üst) ile Leaflet koordinatları (Sol-Alt) farklı olabilir. `App.jsx` içindeki dönüşüm formüllerine dokunurken dikkatli olun.
+2.  **Space Map Logic (IMPORTANT):**
+    - We do not use the standard World map (Lat/Lng)!
+    - We use **L.CRS.Simple**. This is a pixel-based coordinate system starting from the [0,0] point.
+    - YOLO coordinates (Top-Left) and Leaflet coordinates (Bottom-Left) might differ. Be careful when touching the conversion formulas in `App.jsx`.
 
-3.  **API Bağlantısı:**
-    * Backend adresi kod içinde sabitlenmiştir: `const API_URL = "http://localhost:8001"`
-    * Eğer backend portunu değiştirirseniz burayı güncellemeyi unutmayın.
+3.  **API Connection:**
+    - Backend address is hardcoded in the code: `const API_URL = "http://localhost:8001"`
+    - If you change the backend port, don't forget to update this.
 
-## 🚀 Geliştirme İpuçları
-* Tasarım için `src/index.css` içindeki CSS değişkenlerini (`--text-color` vb.) kullanın. Hardcode renk yazmaktan kaçının.
-* Log ekranı (`sidebar`) sadece debug amaçlıdır, son kullanıcıya bu kadar detay göstermeyeceğiz.
+## 🚀 Development Tips
 
-## 🐛 Sık Karşılaşılan Sorunlar
-* **"Network Error":** Backend (Port 8001) ayakta mı? CORS ayarı `main.py` içinde yapılı mı?
-* **Harita Yüklenmiyor:** Resim yolu (`/images/...`) doğru mu? Backend statik dosyaları sunuyor mu?
+- Use CSS variables in `src/index.css` (`--text-color` etc.) for design. Avoid writing hardcoded colors.
+- The log screen (`sidebar`) is only for debugging purposes, we won't show this much detail to the end user.
+
+## 🐛 Common Issues
+
+- **"Network Error":** Is the Backend (Port 8001) up? Is the CORS setting made in `main.py`?
+- **Map Not Loading:** Is the image path (`/images/...`) correct? Is the Backend serving static files?

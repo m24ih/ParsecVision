@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 
-// API Adresi (Docker dışından eriştiğimiz için localhost:8001)
+// API Address (localhost:8001 since we access it from outside Docker)
 const API_URL = "http://localhost:8001"
 
 function App() {
@@ -10,24 +10,24 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [analysisResult, setAnalysisResult] = useState(null)
 
-  // Log ekleme yardımcısı
+  // Log adding helper
   const addLog = (msg) => {
     const time = new Date().toLocaleTimeString()
     setLogs(prev => [`[${time}] ${msg}`, ...prev])
   }
 
-  // Dosya Seçimi
+  // File Selection
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0])
-    addLog(`Dosya seçildi: ${e.target.files[0].name}`)
+    addLog(`File selected: ${e.target.files[0].name}`)
   }
 
-  // 1. Adım: Görüntüyü Gönder ve YOLO Analizi Al
+  // Step 1: Send Image and Get YOLO Analysis
   const handleUpload = async () => {
     if (!selectedFile) return;
     
     setLoading(true)
-    addLog("YOLO taraması başlatılıyor...")
+    addLog("Starting YOLO scan...")
     
     const formData = new FormData()
     formData.append("file", selectedFile)
@@ -39,79 +39,79 @@ function App() {
       
       const data = response.data
       setAnalysisResult(data)
-      addLog(`Tarama Tamamlandı! ${data.detections_found} nesne bulundu.`)
-      console.log("YOLO Sonucu:", data)
+      addLog(`Scan Completed! ${data.detections_found} objects found.`)
+      console.log("YOLO Result:", data)
 
     } catch (error) {
       console.error(error)
-      addLog(`HATA: ${error.message}`)
+      addLog(`ERROR: ${error.message}`)
     } finally {
       setLoading(false)
     }
   }
 
-  // 2. Adım: Seçilen Nesneyi Gemini'ye Sor
+  // Step 2: Ask Gemini about the Selected Object
   const askGemini = async (detectionId, label) => {
-    addLog(`Gemini'ye soruluyor: ${label}...`)
+    addLog(`Asking Gemini: ${label}...`)
     try {
-      // Backend'deki endpoint'e istek at
+      // Send request to backend endpoint
       const response = await axios.post(`${API_URL}/explain-detection/${detectionId}`)
       const text = response.data.description
-      addLog(`GEMINI YANITI: ${text}`)
+      addLog(`GEMINI RESPONSE: ${text}`)
     } catch (error) {
-      addLog(`Gemini Hatası: ${error.message}`)
+      addLog(`Gemini Error: ${error.message}`)
     }
   }
 
   return (
     <div className="container">
-      {/* SOL PANEL: Kontrol ve Loglar */}
+      {/* LEFT PANEL: Controls and Logs */}
       <div className="sidebar">
         <h2>PARSEC VISION</h2>
         
         <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
           <input type="file" onChange={handleFileChange} />
           <button onClick={handleUpload} disabled={loading}>
-            {loading ? "TARANIYOR..." : "TARAMAYI BAŞLAT"}
+            {loading ? "SCANNING..." : "START SCAN"}
           </button>
         </div>
 
-        {/* TESPİT LİSTESİ */}
+        {/* DETECTION LIST */}
         {analysisResult && (
           <div>
-            <h3>BULGULAR ({analysisResult.detections_found})</h3>
+            <h3>FINDINGS ({analysisResult.detections_found})</h3>
             {analysisResult.results.map((det, index) => (
               <div key={index} className="log-entry" style={{marginBottom: '5px'}}>
                 <strong>{det.label}</strong> (%{det.confidence})
                 <br/>
-                {/* Şimdilik ID'yi backend döndürmediği için dummy ID kullanıyoruz, 
-                    sonraki adımda bunu düzelteceğiz. */}
+                {/* Since backend returns ID now, we can use it directly. 
+                    (Comment updated during translation) */}
                 <button 
                   style={{fontSize: '0.7rem', marginTop: '5px', background: det.id ? '#45a29e' : 'gray'}}
                   onClick={() => askGemini(det.id, det.label)}
                   disabled={!det.id}
                 >
-                  GEMINI ANALİZİ
+                  GEMINI ANALYSIS
                 </button>
               </div>
             ))}
           </div>
         )}
 
-        {/* LOG EKRANI */}
+        {/* LOG SCREEN */}
         <div style={{marginTop: 'auto'}}>
-          <h3>SİSTEM LOGLARI</h3>
+          <h3>SYSTEM LOGS</h3>
           {logs.map((log, i) => (
             <div key={i} className="log-entry">{log}</div>
           ))}
         </div>
       </div>
 
-      {/* SAĞ PANEL: Harita (Şimdilik Boş) */}
+      {/* RIGHT PANEL: Map (Empty for now) */}
       <div className="map-area">
         <div style={{position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)'}}>
-          <h1>HARİTA MODÜLÜ</h1>
-          <p>Sistem Bağlantısı Bekleniyor...</p>
+          <h1>MAP MODULE</h1>
+          <p>Waiting for System Connection...</p>
         </div>
       </div>
     </div>

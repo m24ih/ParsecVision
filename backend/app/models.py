@@ -11,7 +11,7 @@ class ImageRecord(Base):
     uploaded_at = Column(DateTime, default=datetime.utcnow)
     status = Column(String, default="pending")  # pending, processing, completed, failed
     
-    # Analiz Sonuçları
+    # Analysis Results
     center_ra = Column(Float, nullable=True)
     center_dec = Column(Float, nullable=True)
     
@@ -23,7 +23,7 @@ class Detection(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     image_id = Column(String, ForeignKey("images.id"))
     
-    # YOLO Çıktıları
+    # YOLO Outputs
     label = Column(String)
     confidence = Column(Float)
     x = Column(Float)
@@ -31,9 +31,9 @@ class Detection(Base):
     w = Column(Float)
     h = Column(Float)
     
-    # Plugin Zenginleştirmeleri (Gemini & Gaia)
+    # Plugin Enrichments (Gemini & Gaia)
     real_name = Column(String, nullable=True)
-    distance_pc = Column(String, nullable=True) # Uzaklık
-    description = Column(String, nullable=True) # AI Açıklaması
+    distance_pc = Column(String, nullable=True) # Distance
+    description = Column(String, nullable=True) # AI Description
     
     image = relationship("ImageRecord", back_populates="detections")

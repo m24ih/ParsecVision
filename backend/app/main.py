@@ -10,36 +10,36 @@ from app.services.llm_service import LLMService
 from app.services.yolo_service import YOLOService
 from fastapi.middleware.cors import CORSMiddleware
 
-# Tabloları oluştur
+# Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ParsecVision Core 0.2.0")
-# --- CORS AYARLARI (YENİ) ---
+# --- CORS SETTINGS (NEW) ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Güvenlik notu: Prodüksiyonda sadece "http://localhost:5173" olmalı
+    allow_origins=["*"], # Security note: In production this should be only "http://localhost:5173"
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Servisleri başlat
+# Start services
 yolo_service = YOLOService()
-# Gemini servisini her istekte başlatmak yerine burada global tanımlayabiliriz 
-# ama API key hatası almamak için endpoint içinde çağırmak daha güvenli olabilir.
+# We could initialize the Gemini service globally here instead of starting it with every request,
+# but calling it inside the endpoint might be safer to avoid API key errors.
 
 @app.post("/upload-and-detect")
 async def process_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
-    1. Görüntüyü kaydeder.
-    2. YOLO ile tarar.
-    3. Sonuçları veritabanına yazar.
+    1. Saves the image.
+    2. Scans with YOLO.
+    3. Writes results to database.
     """
-    # Klasör kontrolü
+    # Folder check
     upload_dir = "data/raw"
     os.makedirs(upload_dir, exist_ok=True)
     
-    # Dosya kaydetme
+    # Save file
     file_id = str(uuid.uuid4())
     file_ext = file.filename.split(".")[-1]
     file_path = f"{upload_dir}/{file_id}.{file_ext}"
@@ -47,7 +47,7 @@ async def process_image(file: UploadFile = File(...), db: Session = Depends(get_
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
-    # DB Kaydı (Resim)
+    # DB Record (Image)
     db_image = models.ImageRecord(
         id=file_id, 
         filename=file.filename, 
@@ -55,11 +55,11 @@ async def process_image(file: UploadFile = File(...), db: Session = Depends(get_
     )
     db.add(db_image)
     
-    # YOLO Analizi
+    # YOLO Analysis
     results = yolo_service.detect_objects(file_path)
     
-    # DB Kaydı ve Yanıt Hazırlığı
-    response_detections = [] # Frontend'e dönecek liste
+    # DB Record and Response Preparation
+    response_detections = [] # List to return to Frontend
     
     for det in results:
         new_det = models.Detection(
@@ -72,12 +72,12 @@ async def process_image(file: UploadFile = File(...), db: Session = Depends(get_
             h=det["box"]["h"]
         )
         db.add(new_det)
-        db.flush() # Commit etmeden ID alabilmek için flush yapıyoruz
-        db.refresh(new_det) # ID'yi nesneye yükle
+        db.flush() # We flush to get the ID without committing
+        db.refresh(new_det) # Load ID into object
         
-        # Yanıt listesine ID ile birlikte ekle
+        # Add to response list with ID
         response_detections.append({
-            "id": new_det.id, # İŞTE EKSİK OLAN PARÇA BU
+            "id": new_det.id,
             "label": new_det.label,
             "confidence": new_det.confidence,
             "box": {
@@ -90,34 +90,34 @@ async def process_image(file: UploadFile = File(...), db: Session = Depends(get_
     return {
         "image_id": file_id,
         "detections_found": len(results),
-        "results": response_detections # Artık içinde ID'ler var
+        "results": response_detections
     }
 
 @app.post("/explain-detection/{detection_id}")
 def explain_detection_with_gemini(detection_id: int, db: Session = Depends(get_db)):
     """
-    Veritabanındaki belirli bir tespiti (örneğin 'star') Gemini'ye sorar.
+    Asks Gemini about a specific detection in the database (e.g. 'star').
     """
-    # 1. Tespiti bul
+    # 1. Find the detection
     detection = db.query(models.Detection).filter(models.Detection.id == detection_id).first()
     if not detection:
-        raise HTTPException(status_code=404, detail="Tespit bulunamadı")
+        raise HTTPException(status_code=404, detail="Detection not found")
         
-    # 2. Eğer zaten açıklama varsa tekrar sorma (Maliyet/Hız)
+    # 2. If description already exists, don't ask again (Cost/Speed)
     if detection.description:
         return {"source": "cache", "description": detection.description}
     
-    # 3. Gemini'ye sor
+    # 3. Ask Gemini
     llm = LLMService()
-    # Not: Gerçek koordinat dönüşümü yapmadığımız için şimdilik sadece türünü soruyoruz.
-    # İleride buraya "Bu cisim X:100 Y:200 koordinatındadır" bilgisini de ekleyeceğiz.
+    # Note: Since we are not doing real coordinate transformation, we only ask for the type for now.
+    # In the future, we will add "This object is at coordinates X:100 Y:200" information here.
     summary = llm.analyze_celestial_object(
-        obj_name=f"Bilinmeyen {detection.label}", # Şimdilik genel isim
+        obj_name=f"Unknown {detection.label}", # Generic name for now
         obj_type=detection.label,
-        distance="Bilinmiyor"
+        distance="Unknown"
     )
     
-    # 4. Cevabı kaydet
+    # 4. Save the response
     detection.description = summary
     db.commit()
     
