@@ -1,46 +1,47 @@
-import google.generativeai as genai
 import os
-import json
+from google import genai
+
 
 class LLMService:
     def __init__(self):
-        # We get the API key from the .env file
-        api_key = os.getenv("GEMINI_API_KEY")
-        
-        if not api_key:
-            print("WARNING: GEMINI_API_KEY not found. AI features will not work.")
-            self.model = None
+        self.api_key = os.getenv("GEMINI_API_KEY")
+        if self.api_key:
+            self.client = genai.Client(api_key=self.api_key)
         else:
-            try:
-                genai.configure(api_key=api_key)
-                self.model = genai.GenerativeModel('gemini-3-flash-preview')
-            except Exception as e:
-                print(f"Gemini Connection Error: {e}")
-                self.model = None
+            self.client = None
+            print("WARNING: GEMINI_API_KEY not found. AI analysis will be disabled.")
 
-    def analyze_celestial_object(self, obj_name: str, obj_type: str, distance: str):
-        """
-        Retrieves astronomical data about the celestial body and extracts a summary in English.
-        """
-        if not self.model:
-            return "AI Service Disabled (API Key Missing or Invalid)"
+    def explain_detection(self, label: str):
+        if not self.client:
+            return "Gemini API key is not configured."
 
-        prompt = f"""
-        You are an expert astrophysicist. Using the celestial body data below,
-        write a scientific but understandable short summary (maximum 3 sentences) appealing to a curious user.
-        
-        Object Information:
-        - Name: {obj_name}
-        - Type: {obj_type}
-        - Distance: {distance} parsec
-        
-        Your summary should be in the following format:
-        1. What exactly is this object?
-        2. Why is it scientifically important or what is an interesting feature of it?
-        """
+        prompt = f"You are an astrophysicist. Briefly explain the astronomical object or concept '{label}' using a scientific and rational tone."
 
         try:
-            response = self.model.generate_content(prompt)
-            return response.text.strip()
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt
+            )
+            return response.text
         except Exception as e:
-            return f"Error occurred during analysis: {str(e)}"
+            return f"Gemini Error: {str(e)}"
+
+    def analyze_coordinates(self, ra: float, dec: float):
+        if not self.client:
+            return "Gemini API key is not configured."
+
+        prompt = (
+            f"You are the AI astronomer for the ParsecVision platform. "
+            f"A user uploaded a telescope image, and Astrometry.net solved the coordinates as "
+            f"Right Ascension (RA): {ra}°, Declination (Dec): {dec}°. "
+            f"Please explain where these coordinates point to in the universe, identify any famous celestial bodies "
+            f"(galaxies, nebulae, star clusters, etc.) located in this region, and describe the astrophysical significance "
+            f"of this area in a rational and direct tone."
+        )
+
+        try:
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt
+            )
+            return response.text
+        except Exception as e:
+            return f"Gemini Error: {str(e)}"
