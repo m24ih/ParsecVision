@@ -1,66 +1,61 @@
-import shutil
-import uuid
 import os
-from datetime import datetime
-from fastapi import FastAPI, File, UploadFile, Depends, HTTPException, BackgroundTasks
+import cv2
+import uuid
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+
 from app.database import engine, Base, get_db
 from app import models
-from app.services.llm_service import LLMService
 from app.services.yolo_service import YOLOService
-from fastapi.middleware.cors import CORSMiddleware
+from app.services.llm_service import LLMService
+from app.services.astrometry_service import AstrometryService
 
-# Create tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="ParsecVision Core 0.2.0")
-# --- CORS SETTINGS (NEW) ---
+app = FastAPI(title="ParsecVision Core 0.3.0")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Security note: In production this should be only "http://localhost:5173"
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Start services
+os.makedirs("data/raw", exist_ok=True)
+app.mount("/images", StaticFiles(directory="data/raw"), name="images")
+
 yolo_service = YOLOService()
-# We could initialize the Gemini service globally here instead of starting it with every request,
-# but calling it inside the endpoint might be safer to avoid API key errors.
+llm_service = LLMService()
+astrometry_service = AstrometryService()
+
+
+class CosmicRequest(BaseModel):
+    ra: float
+    dec: float
+
 
 @app.post("/upload-and-detect")
-async def process_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    """
-    1. Saves the image.
-    2. Scans with YOLO.
-    3. Writes results to database.
-    """
-    # Folder check
-    upload_dir = "data/raw"
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    # Save file
+def process_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
     file_id = str(uuid.uuid4())
-    file_ext = file.filename.split(".")[-1]
-    file_path = f"{upload_dir}/{file_id}.{file_ext}"
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-        
-    # DB Record (Image)
-    db_image = models.ImageRecord(
-        id=file_id, 
-        filename=file.filename, 
-        status="processed"
-    )
+    extension = file.filename.split(".")[-1]
+    file_path = f"data/raw/{file_id}.{extension}"
+
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+
+    db_image = models.ImageRecord(id=file_id, filename=file.filename)
+
     db.add(db_image)
-    
-    # YOLO Analysis
+    db.commit()
+
     results = yolo_service.detect_objects(file_path)
-    
-    # DB Record and Response Preparation
-    response_detections = [] # List to return to Frontend
-    
+    astro_result = astrometry_service.solve_image(file_path)
+
+    response_detections = []
     for det in results:
         new_det = models.Detection(
             image_id=file_id,
@@ -69,56 +64,48 @@ async def process_image(file: UploadFile = File(...), db: Session = Depends(get_
             x=det["box"]["x"],
             y=det["box"]["y"],
             w=det["box"]["w"],
-            h=det["box"]["h"]
+            h=det["box"]["h"],
         )
         db.add(new_det)
-        db.flush() # We flush to get the ID without committing
-        db.refresh(new_det) # Load ID into object
-        
-        # Add to response list with ID
-        response_detections.append({
-            "id": new_det.id,
-            "label": new_det.label,
-            "confidence": new_det.confidence,
-            "box": {
-                "x": new_det.x, "y": new_det.y, "w": new_det.w, "h": new_det.h
+        db.flush()
+        db.refresh(new_det)
+        response_detections.append(
+            {
+                "id": new_det.id,
+                "label": new_det.label,
+                "confidence": new_det.confidence,
+                "box": {"x": new_det.x, "y": new_det.y, "w": new_det.w, "h": new_det.h},
             }
-        })
-        
+        )
+
+    img = cv2.imread(file_path)
+    img_h, img_w = img.shape[:2]
+
     db.commit()
-    
+
     return {
         "image_id": file_id,
+        "width": img_w,
+        "height": img_h,
         "detections_found": len(results),
-        "results": response_detections
+        "astrometry": astro_result,
+        "results": response_detections,
     }
 
+
 @app.post("/explain-detection/{detection_id}")
-def explain_detection_with_gemini(detection_id: int, db: Session = Depends(get_db)):
-    """
-    Asks Gemini about a specific detection in the database (e.g. 'star').
-    """
-    # 1. Find the detection
-    detection = db.query(models.Detection).filter(models.Detection.id == detection_id).first()
+def explain_detection(detection_id: int, db: Session = Depends(get_db)):
+    detection = (
+        db.query(models.Detection).filter(models.Detection.id == detection_id).first()
+    )
     if not detection:
         raise HTTPException(status_code=404, detail="Detection not found")
-        
-    # 2. If description already exists, don't ask again (Cost/Speed)
-    if detection.description:
-        return {"source": "cache", "description": detection.description}
-    
-    # 3. Ask Gemini
-    llm = LLMService()
-    # Note: Since we are not doing real coordinate transformation, we only ask for the type for now.
-    # In the future, we will add "This object is at coordinates X:100 Y:200" information here.
-    summary = llm.analyze_celestial_object(
-        obj_name=f"Unknown {detection.label}", # Generic name for now
-        obj_type=detection.label,
-        distance="Unknown"
-    )
-    
-    # 4. Save the response
-    detection.description = summary
-    db.commit()
-    
-    return {"source": "gemini", "description": summary}
+
+    explanation = llm_service.explain_detection(detection.label)
+    return {"description": explanation}
+
+
+@app.post("/analyze-cosmic")
+def analyze_cosmic(req: CosmicRequest):
+    analysis = llm_service.analyze_coordinates(req.ra, req.dec)
+    return {"analysis": analysis}
