@@ -24,9 +24,8 @@ services:
     depends_on:
       - db
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/parsec_db
-      # API Keyleri buraya eklenecek
-      # - ASTROMETRY_API_KEY=xxx
+      - DATABASE_URL=${DATABASE_URL}
+      - ASTROMETRY_API_KEY=${ASTROMETRY_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
   frontend:
     build: ./frontend
