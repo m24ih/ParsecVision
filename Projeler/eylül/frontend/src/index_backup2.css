@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;700&display=swap');
+
+
+
+:root {
+
+--bg-color: #050608;
+
+--panel-bg: rgba(10, 15, 20, 0.85);
+
+--text-color: #e0ffff;
+
+--highlight: #00e5ff;
+
+}
+
+
+
+body { margin: 0; background-color: var(--bg-color); color: var(--text-color); font-family: 'Exo 2', sans-serif; overflow: hidden; }
+
+
+
+.container { 
+  display: grid; 
+  height: 100vh; 
+  width: 100vw; 
+  grid-template-areas: 
+    "header header header"
+    "left-panel map-area right-panel";
+  grid-template-columns: 350px 1fr auto;
+  grid-template-rows: 65px 1fr;
+}
+
+.top-header {
+  grid-area: header;
+  background: var(--panel-bg);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+  z-index: 20;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.top-header h1 {
+  font-size: 1.5rem;
+  margin: 0;
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+.sidebar { 
+  grid-area: left-panel;
+  background: var(--panel-bg); 
+  padding: 25px; 
+  border-right: 1px solid rgba(0, 229, 255, 0.1); 
+  display: flex; 
+  flex-direction: column; 
+  z-index: 10; 
+  height: 100%; 
+  overflow-y: auto; 
+  overflow-x: hidden;
+  box-sizing: border-box; 
+}
+
+.right-panel {
+  grid-area: right-panel;
+  width: 380px;
+  background: var(--panel-bg);
+  padding: 25px;
+  border-left: 1px solid rgba(0, 229, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.logs-container {
+  margin-top: 20px;
+  height: 250px; /* SABİT YÜKSEKLİK: Kutu boyunu net olarak belirliyoruz */
+  flex-shrink: 0; /* Üstteki elementler yüzünden ezilmesini engelliyoruz */
+  overflow-y: scroll; /* İçerik boş olsa bile kendi scrollbar'ını sürekli gösterir */
+  padding-right: 10px;
+  
+  /* Log kutusunun sınırlarını net görmek istersen şu iki satırı da kullanabilirsin: */
+  border-top: 1px dashed rgba(0, 229, 255, 0.3);
+  padding-top: 10px;
+}
+
+/* Kendi ince scrollbar tasarımı aynen kalıyor */
+.logs-container::-webkit-scrollbar { width: 6px; }
+.logs-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+.logs-container::-webkit-scrollbar-thumb { background-color: var(--highlight); border-radius: 4px; }
+
+
+/* Scrollbar */
+
+.sidebar::-webkit-scrollbar { width: 8px; }
+
+.sidebar::-webkit-scrollbar-track { background: var(--panel-bg); }
+
+.sidebar::-webkit-scrollbar-thumb { background-color: var(--highlight); border-radius: 10px; border: 2px solid var(--bg-color); }
+
+.sidebar::-webkit-scrollbar-thumb:hover { background-color: #ffffff; }
+
+
+
+/* Harita ve Zoom Butonları */
+
+.map-area { flex-grow: 1; position: relative; background-color: #040715 !important; }
+
+.leaflet-container { background-color: #040715 !important; }
+
+
+
+/* Sabit Dış Çerçeve */
+
+.frame-glow-effect {
+
+filter: drop-shadow(0 0 8px var(--highlight));
+
+pointer-events: none;
+
+}
+
+
+
+.leaflet-bar { border: 1px solid var(--highlight) !important; border-radius: 4px !important; overflow: hidden; }
+
+.leaflet-bar a { background-color: #0c0e15 !important; color: var(--highlight) !important; width: 30px !important; height: 30px !important; border-bottom: 1px solid var(--highlight) !important; }
+
+.leaflet-bar a:hover { background-color: var(--highlight) !important; color: #000 !important; }
+
+
+
+/* Buton ve Kutu Tasarımları */
+
+.file-upload-container, .custom-file-upload, button:not(.icon-button), .celestial-box { width: 100% !important; box-sizing: border-box; }
+
+
+
+.custom-file-upload, button {
+
+display: block; padding: 14px; text-align: center; font-family: 'Exo 2';
+
+letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; cursor: pointer;
+
+transition: all 0.3s ease; border: 1px solid var(--highlight);
+
+background: transparent; color: var(--highlight); margin-top: 10px;
+
+}
+
+.custom-file-upload { border-style: dashed; background: rgba(0,0,0,0.3); margin-top: 0; }
+
+.custom-file-upload:hover, button:hover { background: var(--highlight); color: #000; }
+
+
+
+.cosmic-explanation {
+
+word-wrap: break-word;
+
+white-space: pre-wrap;
+
+font-size: 0.9rem;
+
+margin-top: 15px;
+
+padding: 15px;
+
+background: rgba(0, 229, 255, 0.05); /* Arka planı hafif maviye çevirdik */
+
+border: 1px solid var(--highlight);
+
+border-radius: 6px;
+
+text-align: justify; /* Metni iki yana yaslar */
+
+line-height: 1.6; /* Satır arası boşluk */
+
+color: #c0fcfd; /* Biraz daha okunaklı */
+}
+
+/* History Modal Tasarımı */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+.modal-content { background: var(--panel-bg); border: 1px solid var(--highlight); padding: 30px; width: 400px; box-shadow: 0 0 15px var(--highlight); border-radius: 8px; color: var(--text-color); }
+
+/* Measurement Tool */
+.measure-tooltip {
+  background-color: rgba(10, 15, 20, 0.9) !important;
+  color: #ff00e6 !important;
+  border: 1px solid #ff00e6 !important;
+  font-family: 'Exo 2', sans-serif !important;
+  font-weight: bold;
+  font-size: 0.9rem;
+  box-shadow: 0 0 5px #ff00e6 !important;
+}
+.measure-tooltip::before { border-top-color: #ff00e6 !important; }
+
+.map-measuring .leaflet-container {
+  cursor: crosshair !important;
+}
+.map-measuring .leaflet-interactive {
+  cursor: crosshair !important;
+}
+
+.modal-title { font-size: 1.8rem; letter-spacing: 2px; color: var(--text-color); margin: 0 0 25px 0; }
+
+/* Dinamik Görüntü Filtresi */
+.leaflet-image-layer, .astronomy-image {
+  filter: var(--img-filter, none) !important;
+  transition: filter 0.1s ease-out;
+}
+
+.log-entry { border-left: 3px solid var(--highlight); padding: 8px; margin-bottom: 8px; background: rgba(255,255,255,0.03); font-size: 0.8rem; word-break: break-all; }

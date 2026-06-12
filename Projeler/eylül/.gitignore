@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pt
+*.h5
+node_modules/
+.env
+data/
+backend/temp_uploads/
+*.pt
+*.db
+*.pth
+data/
+images/

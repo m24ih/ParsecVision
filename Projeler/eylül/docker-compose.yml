@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:15
+    container_name: db
+    # ... diğer ayarlar ...
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: parsec_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: parsec_backend
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - ASTROMETRY_API_KEY=${ASTROMETRY_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+  frontend:
+    build: ./frontend
+    container_name: parsec_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # Bu satır çok kritik: Host'taki node_modules ile konteynerin çakışmasını önler
+      - /app/node_modules
+    depends_on:
+      - backend
+volumes:
+  postgres_data:

@@ -1,0 +1,18 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+fastapi
+uvicorn
+python-multipart
+sqlalchemy
+psycopg2-binary
+python-dotenv
+ultralytics
+astropy
+astroquery
+google-genai
+opencv-python-headless
+requests
+# segment-anything
+git+https://github.com/facebookresearch/segment-anything.git
+opencv-python
